@@ -45,6 +45,9 @@ public class GedcomAttach {
             top.removeFromParent();
 
             if (filterDuplicateIndi(top)) {
+                // drop this individual
+                // TODO: but keep their FAMC and FAMS links! (How?)
+            } else {
                 treeOutput.getRoot().addChildBefore(top, trlrOutput);
             }
 
@@ -52,6 +55,7 @@ public class GedcomAttach {
         }
     }
 
+    private static final Set<GedcomTag> DROP = Set.of(HEAD, TRLR, SUBM, SUBN);
     private static boolean filterDuplicateIndi(final TreeNode<GedcomLine> top) {
         final GedcomLine item = top.getObject();
         final String id = item.getID();
@@ -70,6 +74,8 @@ public class GedcomAttach {
                     refnToId.put(refn, id);
                 }
             }
+        } else if (DROP.contains(item.getTag())) {
+            drop = true;
         }
         return drop;
     }
