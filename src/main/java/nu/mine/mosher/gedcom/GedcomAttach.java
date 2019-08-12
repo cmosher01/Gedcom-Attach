@@ -10,7 +10,7 @@ import java.util.*;
 import static nu.mine.mosher.gedcom.GedcomTag.*;
 
 public class GedcomAttach {
-    private static final Map<String, String> refnToId = new HashMap<>(8192, 1.0F);
+    private static final Map<String, TreeNode<GedcomLine>> refnToNode = new HashMap<>(8192, 1.0F);
     private static final Map<String, String> idConvs = new HashMap<>();
 
     public static void main(final String... args) throws IOException, InvalidLevel {
@@ -44,10 +44,7 @@ public class GedcomAttach {
         while (Objects.nonNull(top)) {
             top.removeFromParent();
 
-            if (filterDuplicateIndi(top)) {
-                // drop this individual
-                // TODO: but keep their FAMC and FAMS links! (How?)
-            } else {
+            if (!filterDuplicateIndi(top)) {
                 treeOutput.getRoot().addChildBefore(top, trlrOutput);
             }
 
@@ -63,21 +60,31 @@ public class GedcomAttach {
         if (item.getTag().equals(INDI) && !id.isEmpty()) {
             final String refn = getRefnFrom(top);
             if (!refn.isEmpty()) {
-                if (refnToId.containsKey(refn)) {
+                if (refnToNode.containsKey(refn)) {
                     // individual with duplicate reference number
                     // we need to remap their ID to the ID of the
                     // corresponding individual in the target file
-                    idConvs.put(id, refnToId.get(refn));
+                    idConvs.put(id, refnToNode.get(refn).getObject().getID());
+                    copyFamcFams(top, refnToNode.get(refn));
                     // and drop this duplicate individual
                     drop = true;
                 } else {
-                    refnToId.put(refn, id);
+                    refnToNode.put(refn, top);
                 }
             }
         } else if (DROP.contains(item.getTag())) {
             drop = true;
         }
         return drop;
+    }
+
+    private static void copyFamcFams(final TreeNode<GedcomLine> from, final TreeNode<GedcomLine> to) {
+        for (final TreeNode<GedcomLine> a : from) {
+            final GedcomLine attr = a.getObject();
+            if (attr != null && (attr.getTag().equals(FAMC) || attr.getTag().equals(FAMS))) {
+                to.addChild(new TreeNode<>(attr.replacePointer(attr.getPointer())));
+            }
+        }
     }
 
     private static String getRefnFrom(final TreeNode<GedcomLine> top) {

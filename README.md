@@ -11,6 +11,9 @@ tree had been split into multiple GEDCOM files, with common individuals having
 the same `REFN` values. This program then re-attaches the trees into one file.
 
 This project is in alpha phase; it does not handle family links correctly in
-every case, for duplicate individuals. It also assumes every ID is unique, even
+every case, for duplicate individuals. It will merge two spouses, but copy
+both families, resulting in duplicate `FAM` records.
+
+Warning: the program assumes every ID is unique, even
 across different GEDCOM files. In this regard, you should first run each input
 GEDCOM file through [Gedcom-Uid](https://github.com/cmosher01/Gedcom-Uid).
