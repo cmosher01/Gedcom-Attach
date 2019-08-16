@@ -116,7 +116,11 @@ public class GedcomAttach {
     }
 
     private static GedcomTree readGedcom(File fileInput) throws IOException, InvalidLevel {
-        return Gedcom.readFile(new BufferedInputStream(Files.newInputStream(fileInput.toPath())));
+        final BufferedInputStream in = new BufferedInputStream(Files.newInputStream(fileInput.toPath()));
+        final GedcomTree tree = Gedcom.readFile(in);
+        in.close();
+        new GedcomConcatenator(tree).concatenate();
+        return tree;
     }
 
     private static File fileForPathArg(final String filepath) throws IOException {
